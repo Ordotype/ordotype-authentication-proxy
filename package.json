@@ -7,6 +7,15 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "files": ["dist"],
+  "main": "./dist/ordotype-authentication-proxy.umd.cjs",
+  "module": "./dist/ordotype-authentication-proxy.js",
+  "exports": {
+    ".": {
+      "import": "./dist/ordotype-authentication-proxy.js",
+      "require": "./dist/ordotype-authentication-proxy.umd.cjs"
+    }
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

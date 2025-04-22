@@ -8,9 +8,9 @@ export default defineConfig({
     build: {
         lib: {
             entry: resolve(__dirname, 'src/main.ts'),
-            name: 'MyLib',
+            name: 'OrdotypeAuthenticationProxy',
             // the proper extensions will be added
-            fileName: 'my-lib',
+            fileName: 'ordotype-authentication-proxy',
         },
         rollupOptions: {
             // // make sure to externalize deps that shouldn't be bundled
