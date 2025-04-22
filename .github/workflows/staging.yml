@@ -5,6 +5,8 @@ on:
     types: [published]
   workflow_dispatch:
 
+permissions: write-all
+
 env:
   VITE_API_URL: ${{vars.VITE_API_URL}}
   VITE_MS_PUBLIC_KEY: ${{vars.VITE_MS_PUBLIC_KEY}}
