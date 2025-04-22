@@ -2,7 +2,7 @@
   "name": "ordotype-authentication-proxy",
   "author": {
     "name": "Raquel Lopez",
-     "email": "raquelcle@gmail.com"
+    "email": "raquelcle@gmail.com"
   },
   "private": true,
   "version": "0.0.0",
@@ -15,6 +15,9 @@
   "devDependencies": {
     "@types/node": "^22.14.1",
     "typescript": "~5.7.2",
-    "vite": "^6.3.1"
+    "vite": "^6.3.1",
+    "@memberstack/dom": "^1.9.40"
+  },
+  "dependencies": {
   }
 }
