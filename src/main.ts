@@ -1,5 +1,7 @@
-import {MemberstackEvents} from "./lib/memberstack-proxy-wrapper";
+import {MemberstackEvents, MemberstackInterceptor} from "./lib/memberstack-proxy-wrapper";
 import {AuthService} from "./lib/http";
+
+MemberstackInterceptor()
 
 document.addEventListener(MemberstackEvents.GET_APP, async () => {
     console.log("getApp");
