@@ -1,0 +1,51 @@
+name: Publish Library to Git Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Version tag to release (e.g. v1.0.0 or v1.0.0-beta)"
+        required: true
+  release:
+    types: [published]
+
+permissions: write-all
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Needed to push tags
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build in library mode
+        run: npm run build
+
+      - name: Create release commit and tag
+        env:
+          TAG_NAME: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git checkout -b release-build
+
+          git add -f dist
+          git commit -m "Release $TAG_NAME with dist build"
+          git tag $TAG_NAME
+          git push origin refs/tags/$TAG_NAME
+
+      - name: Cleanup (optional)
+        run: |
+          git push origin --delete release-build || true
