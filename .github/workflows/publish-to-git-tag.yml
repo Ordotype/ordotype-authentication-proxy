@@ -45,16 +45,23 @@ jobs:
           tag_name: ${{ env.TAG_NAME }}
           files: dist/**
           
-      - name: Create temporary commit with dist and push branch (for jsDelivr)
+      - name: Create commit with dist and move tag (for jsDelivr)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git checkout -b release-build $TAG_NAME
+      
+          git fetch --tags
+          git checkout tags/${TAG_NAME} -b release-build
+      
           git add -f dist
-          git commit -m "Release $TAG_NAME with dist"
+          git commit -m "Release ${TAG_NAME} with dist"
+      
+          # Move the tag to this new commit
+          git tag -d ${TAG_NAME}
+          git tag ${TAG_NAME}
           git push origin release-build --force
-
+          git push origin --force --tags
+      
       - name: Cleanup temp branch
         run: |
           git push origin --delete release-build || true
