@@ -1,0 +1,64 @@
+name: Build and Deploy Library
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+      inputs:
+        environment:
+          description: 'Select environment'
+          required: false
+          default: 'staging'
+          type: choice
+          options:
+            - staging
+            - production
+
+permissions: write-all
+
+env:
+  VITE_API_URL: ${{vars.VITE_API_URL}}
+  VITE_MS_PUBLIC_KEY: ${{vars.VITE_MS_PUBLIC_KEY}}
+  GA_COOKIE: ${{vars.GA_COOKIE}}
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+  
+    # Choose environment from input or infer from release tag
+    environment: ${{ github.event.inputs.environment || (contains(github.ref_name, 'beta') && 'staging' || 'production') }}
+
+    # Set env var to use in branch logic
+    env:
+      ENVIRONMENT: ${{ github.event.inputs.environment || (contains(github.ref_name, 'beta') && 'staging' || 'production') }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+      
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build in library mode
+        run: npm run build
+
+      - name: Set target branch
+        id: branch
+        run: |
+          if [[ "${{ env.ENVIRONMENT }}" == "production" ]]; then
+            echo "branch=prod" >> $GITHUB_OUTPUT
+          else
+            echo "branch=preview" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          publish_branch: ${{ steps.branch.outputs.branch }}
