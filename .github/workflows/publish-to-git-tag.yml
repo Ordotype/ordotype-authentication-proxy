@@ -15,32 +15,37 @@ env:
   VITE_API_URL: ${{vars.VITE_API_URL}}
   VITE_MS_PUBLIC_KEY: ${{vars.VITE_MS_PUBLIC_KEY}}
   GA_COOKIE: ${{vars.GA_COOKIE}}
+  TAG_NAME: ${{ github.event.inputs.tag || github.event.release.tag_name }}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ contains(github.ref_name, 'beta') && 'staging' || 'production' }}
+    environment: ${{ contains(github.event.release.tag_name || github.event.inputs.tag, 'beta') && 'staging' || 'production' }}
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Needed to push tags
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20.x'
-          
+
       - name: Install dependencies
         run: npm install
 
       - name: Build in library mode
         run: npm run build
 
-      - name: Create release commit and tag
-        env:
-          TAG_NAME: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+      - name: Upload dist to GitHub Release as artifact
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          files: dist/**
+
+      - name: Create temporary commit with dist and tag (for jsDelivr)
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -48,10 +53,11 @@ jobs:
           git checkout -b release-build
 
           git add -f dist
-          git commit -m "Release $TAG_NAME with dist build"
+          git commit -m "Release $TAG_NAME with dist"
           git tag $TAG_NAME
+          git push origin release-build --force
           git push origin refs/tags/$TAG_NAME
 
-      - name: Cleanup (optional)
+      - name: Cleanup temp branch
         run: |
           git push origin --delete release-build || true
