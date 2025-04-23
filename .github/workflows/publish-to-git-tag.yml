@@ -19,6 +19,7 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: ${{ contains(github.ref_name, 'beta') && 'staging' || 'production' }}
 
     steps:
       - name: Checkout repo
