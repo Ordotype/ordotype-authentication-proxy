@@ -30,11 +30,12 @@ class AuthService {
 
     private async request<TResponse>(
         endpoint: string,
+        entity: string,
         method: string = "GET",
         body: any = null,
         additionalHeaders: Record<string, string> = {}
     ): Promise<TResponse> {
-        const url = `${BASE_URL}/${endpoint}`;
+        const url = `${BASE_URL}/${entity}/${endpoint}`;
         const headers = {
             "Content-Type": "application/json",
             ...this.headers,
@@ -68,6 +69,7 @@ class AuthService {
 
             return await this.request<ValidateSessionResponse>(
                 "validate-session-status",
+                'auth',
                 "POST",
                 null,
                 { Authorization: `Bearer ${memberToken}` }
