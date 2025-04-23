@@ -1,5 +1,5 @@
 function getDeviceId() {
-    const cookieName = import.meta.env.GA_COOKIE; // cookie from Google Analytics Ordotype Container
+    const cookieName = import.meta.env.VITE_GA_COOKIE; // cookie from Google Analytics Ordotype Container
     const cookies = document.cookie.split("; ");
 
     for (const cookie of cookies) {
