@@ -11,6 +11,11 @@ on:
 
 permissions: write-all
 
+env:
+  VITE_API_URL: ${{vars.VITE_API_URL}}
+  VITE_MS_PUBLIC_KEY: ${{vars.VITE_MS_PUBLIC_KEY}}
+  GA_COOKIE: ${{vars.GA_COOKIE}}
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
