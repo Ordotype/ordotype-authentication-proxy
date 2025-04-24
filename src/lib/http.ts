@@ -62,11 +62,14 @@ class AuthService {
         }
     }
 
-    async validateSessionStatus(): Promise<ValidateSessionResponse> {
+    async validateSessionStatus(): Promise<ValidateSessionResponse | null> {
         try {
             // Fetch the member token from localStorage
             const memberToken = localStorage.getItem("_ms-mid");
 
+            if (!memberToken) {
+                return null
+            }
             return await this.request<ValidateSessionResponse>(
                 "validate-session-status",
                 'auth',
@@ -79,6 +82,59 @@ class AuthService {
             throw error;
         }
     }
+
+    // Helper to get a cookie
+    private getCookie(name: string): string | null {
+        const matches = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
+        return matches ? decodeURIComponent(matches[2]) : null;
+    }
+
+    // Helper to set a cookie with expiration time
+    private setCookie(name: string, value: string, expirationMs: number): void {
+        const date = new Date();
+        date.setTime(date.getTime() + expirationMs);
+        document.cookie = `${name}=${encodeURIComponent(value)}; expires=${date.toUTCString()}; path=/`;
+    }
+
+
+    // Reusable throttle function
+    private async throttle<T>(
+        method: () => Promise<T>, // The method to execute (e.g., API call)
+        identifier: string, // Unique key to track this throttle
+        interval: number // Throttle interval in milliseconds
+    ): Promise<T | null> {
+        const lastExecution = this.getCookie(identifier);
+        const now = Date.now();
+
+        // Check if the method was executed within the throttle interval
+        if (lastExecution && now - parseInt(lastExecution, 10) < interval) {
+            console.log(`Skipping execution of ${identifier}: Throttled.`);
+            return null; // Skip execution
+        }
+
+        console.log(`Executing ${identifier}...`);
+
+        // Execute the method, then update the throttle cookie
+        const result = await method();
+        this.setCookie(identifier, now.toString(), interval);
+        return result;
+    }
+
+    // Public wrapper for validateSessionStatus with throttling
+    public validateSessionStatusThrottled(): Promise<ValidateSessionResponse | null> {
+        const memberToken = localStorage.getItem("_ms-mid");
+
+        if (!memberToken) {
+            return Promise.resolve(null)
+        }
+
+        return this.throttle(
+            () => this.validateSessionStatus(),
+            "lastSessionValidation",
+            3 * 60 * 1000 // 3 minutes throttle interval
+        );
+    }
+
 }
 
 export {AuthService};
