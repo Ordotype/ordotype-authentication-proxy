@@ -6,7 +6,12 @@ MemberstackInterceptor()
 document.addEventListener(MemberstackEvents.GET_APP, async () => {
     console.log("getApp");
     const authService = new AuthService()
-    await authService.validateSessionStatus()
+    const authStatus = await authService.validateSessionStatus()
+    if(authStatus) {
+        await authService.logout()
+        window.location.href = "/";
+        return
+    }
 });
 
 

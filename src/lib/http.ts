@@ -1,4 +1,4 @@
-import { ValidateSessionResponse} from "../types/AuthenticationSchema";
+import {ValidateSessionResponse} from "../types/AuthenticationSchema";
 import {getDeviceId} from "./getDeviceId";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
@@ -45,7 +45,7 @@ class AuthService {
         const options: RequestInit = {
             method,
             headers,
-            ...(body && { body: JSON.stringify(body) }),
+            ...(body && {body: JSON.stringify(body)}),
         };
 
         try {
@@ -75,10 +75,32 @@ class AuthService {
                 'auth',
                 "POST",
                 null,
-                { Authorization: `Bearer ${memberToken}` }
+                {Authorization: `Bearer ${memberToken}`}
             );
         } catch (error) {
             console.error("Session validation failed:", error);
+            throw error;
+        }
+    }
+
+    async logout(): Promise<void> {
+        try {
+            // Fetch the member token from localStorage
+            const memberToken = localStorage.getItem("_ms-mid");
+
+            if (!memberToken) {
+                return
+            }
+            await this.request<void>(
+                "logout",
+                'auth',
+                "POST",
+                null,
+                {Authorization: `Bearer ${memberToken}`}
+            );
+            localStorage.removeItem("_ms-mid");
+        } catch (error) {
+            console.error("Session logout failed:", error);
             throw error;
         }
     }
