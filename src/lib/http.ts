@@ -1,5 +1,6 @@
 import {ValidateSessionResponse} from "../types/AuthenticationSchema";
 import {getDeviceId} from "./getDeviceId";
+import {isMemberLoggedIn} from "./utils";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -65,11 +66,10 @@ class AuthService {
     async validateSessionStatus(): Promise<ValidateSessionResponse | null> {
         try {
             // Fetch the member token from localStorage
-            const memberToken = localStorage.getItem("_ms-mid");
-
-            if (!memberToken) {
+            if (!isMemberLoggedIn()) {
                 return null
             }
+            const memberToken = localStorage.getItem("_ms-mid");
             return await this.request<ValidateSessionResponse>(
                 "validate-session-status",
                 'auth',
@@ -86,11 +86,10 @@ class AuthService {
     async logout(): Promise<void> {
         try {
             // Fetch the member token from localStorage
-            const memberToken = localStorage.getItem("_ms-mid");
-
-            if (!memberToken) {
+            if (!isMemberLoggedIn()) {
                 return
             }
+            const memberToken = localStorage.getItem("_ms-mid");
             await this.request<void>(
                 "logout",
                 'auth',
