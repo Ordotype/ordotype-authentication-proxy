@@ -3,6 +3,7 @@ import {AuthError, AuthService} from "./lib/http";
 import {isMemberLoggedIn} from "./lib/utils";
 
 MemberstackInterceptor()
+const authService = new AuthService();
 
 document.addEventListener(MemberstackEvents.GET_APP, async () => {
     console.log("getApp");
@@ -10,22 +11,29 @@ document.addEventListener(MemberstackEvents.GET_APP, async () => {
     if (!isMemberLoggedIn()) {
         return
     }
-    const authService = new AuthService();
     try {
         const isStatusValid = await authService.validateSessionStatus()
         if (isStatusValid === false) {
-            await authService.logout()
+            await window.$memberstackDom.logout()
             window.location.href = "/";
             return
         }
     } catch (error) {
         if (error instanceof AuthError) {
             if(error.status === 401 || error.status === 403)
-                await authService.logout()
+                await window.$memberstackDom.logout()
                 window.location.href = "/";
                 return
         }
     }
 });
+
+document.addEventListener(MemberstackEvents.LOGOUT, async () => {
+    console.log("logout");
+
+    await authService.logout();
+    localStorage.removeItem("_ms-mid");
+    localStorage.removeItem("_ms_mem")
+})
 
 
