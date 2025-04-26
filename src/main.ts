@@ -11,11 +11,19 @@ document.addEventListener(MemberstackEvents.GET_APP, async () => {
         return
     }
     const authService = new AuthService();
-    const isStatusValid = await authService.validateSessionStatus()
-    if(isStatusValid === false) {
-        await authService.logout()
-        window.location.href = "/";
-        return
+    try {
+        const isStatusValid = await authService.validateSessionStatus()
+        if (isStatusValid === false) {
+            await authService.logout()
+            window.location.href = "/";
+            return
+        }
+    } catch (error) {
+        if(error.status === 403) {
+            await authService.logout()
+            window.location.href = "/";
+            return
+        }
     }
 });
 
