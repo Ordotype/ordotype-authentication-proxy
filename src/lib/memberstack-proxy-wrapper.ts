@@ -31,6 +31,7 @@ function MemberstackInterceptor() {
                             cancelable: false,
                         });
                         document.dispatchEvent(evt);
+                        return false
                     }
                     if (propKey === "getApp") {
                         const evt = new Event(MemberstackEvents.GET_APP, {
