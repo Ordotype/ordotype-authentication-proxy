@@ -4,6 +4,21 @@ import {isMemberLoggedIn} from "./utils";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
+export class AuthError extends Error {
+    status: number;
+
+    constructor(message: string, status: number = 500) {
+        super(message);
+        this.name = "AuthError";
+        this.status = status;
+
+        // Maintain proper stack trace for where the error was thrown
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, AuthError);
+        }
+    }
+}
+
 class AuthService {
     private readonly headers: {
         "X-Session-Id"?: string;
@@ -53,7 +68,7 @@ class AuthService {
             const response = await fetch(url, options);
 
             if (!response.ok) {
-                throw new Error(`Error ${response.status}: ${response.statusText}`);
+                throw new AuthError(response.statusText, response.status);
             }
 
             return (await response.json()) as TResponse;
