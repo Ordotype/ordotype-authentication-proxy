@@ -19,7 +19,7 @@ document.addEventListener(MemberstackEvents.GET_APP, async () => {
             return
         }
     } catch (error) {
-        if(error.status === 403) {
+        if (error instanceof Error && 'status' in error && (error as any).status === 403) {
             await authService.logout()
             window.location.href = "/";
             return
