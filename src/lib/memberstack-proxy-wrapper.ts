@@ -45,7 +45,7 @@ function MemberstackInterceptor() {
                         const evt = new CustomEvent(MemberstackEvents.LOGIN, {
                             bubbles: false,
                             cancelable: false,
-                            detail: args as unknown as LoginMemberEmailPasswordParams
+                            detail: args[0] as unknown as LoginMemberEmailPasswordParams
                         });
                         document.dispatchEvent(evt);
 
