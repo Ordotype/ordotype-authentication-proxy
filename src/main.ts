@@ -7,6 +7,12 @@ MemberstackInterceptor()
 const authService = new AuthService();
 
 document.addEventListener(MemberstackEvents.GET_APP, async () => {
+    // ToDo Add logic to exclude verification on some pages
+    if(location.href.includes("challenge")) {
+        console.log("Avoided verification on challenge page")
+        return
+    }
+
     console.log("getApp");
 
     if (!isMemberLoggedIn()) {
