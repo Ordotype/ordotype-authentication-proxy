@@ -71,7 +71,7 @@ class AuthService {
         method: string = "GET",
         body: any = null,
         additionalHeaders: Record<string, string> = {}
-    ): Promise<TResponse> {
+    ): Promise<TResponse | null> {
         const url = `${BASE_URL}/${entity}/${endpoint}`;
         const headers = {
             "Content-Type": "application/json",
@@ -90,6 +90,10 @@ class AuthService {
 
             if (!response.ok) {
                 throw new AuthError(response.statusText, response.status);
+            }
+
+            if (response.status === 204 || !response.body) {
+                return null;
             }
 
             return (await response.json()) as TResponse;
@@ -158,7 +162,7 @@ class AuthService {
             {}
         );
 
-        if (isTwoFactorRequiredResponse(res)) {
+        if (isTwoFactorRequiredResponse(res!)) {
             throw new TwoFactorRequiredError('2fa required', res.data, res.type)
         }
         return res as LoginMemberEmailPasswordPayload
