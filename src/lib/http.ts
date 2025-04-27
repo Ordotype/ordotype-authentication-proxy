@@ -141,11 +141,16 @@ class AuthService {
     }
 
     async login(params: LoginMemberEmailPasswordParams) {
+        const payload = {
+            ...params,
+            device: this.headers["X-Device-Id"] ?? "unknown",
+        }
+
         const res = await this.request<TwoFactorRequiredResponse | LoginMemberEmailPasswordPayload>(
             "login",
             "auth",
             "POST",
-            params,
+            payload,
             {}
         );
 
