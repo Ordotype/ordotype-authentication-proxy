@@ -1,6 +1,7 @@
 import {MemberstackEvents, MemberstackInterceptor} from "./lib/memberstack-proxy-wrapper";
-import {AuthError, AuthService} from "./lib/http";
+import {AuthError, AuthService, TwoFactorRequiredError} from "./lib/http";
 import {isMemberLoggedIn} from "./lib/utils";
+import {LoginMemberEmailPasswordParams} from "@memberstack/dom";
 
 MemberstackInterceptor()
 const authService = new AuthService();
@@ -19,9 +20,9 @@ document.addEventListener(MemberstackEvents.GET_APP, async () => {
         }
     } catch (error) {
         if (error instanceof AuthError) {
-            if(error.status === 401 || error.status === 403)
+            if (error.status === 401 || error.status === 403)
                 await window.$memberstackDom.logout()
-                return
+            return
         }
     }
 });
@@ -35,4 +36,30 @@ document.addEventListener(MemberstackEvents.LOGOUT, async () => {
     window.location.href = "/";
 })
 
+document.addEventListener(MemberstackEvents.LOGIN, async (event) => {
+    console.log("login");
+    if (isMemberLoggedIn()) {
+        console.log('Member is already logged in.')
+        return
+    }
+    try {
+        const {detail} = event as CustomEvent<LoginMemberEmailPasswordParams>;
+        const res = await authService.login({email: detail.email, password: detail.password});
+
+        localStorage.setItem("_ms-mid", res.data.tokens.accessToken);
+        localStorage.setItem("_ms-mem", JSON.stringify(res.data.member));
+
+        window.location.href = res.data.redirect
+    } catch (error) {
+        if (error instanceof TwoFactorRequiredError) {
+            const SESSION_NAME = "_ms-2fa-session";
+            const session = JSON.stringify({data: error.data, type: error.type});
+            sessionStorage.setItem(SESSION_NAME, session);
+
+            window.location.href = import.meta.env.VITE_2FA_URL;
+            return
+        }
+        throw error;
+    }
+})
 

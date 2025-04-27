@@ -1,6 +1,7 @@
-import {ValidateSessionResponse} from "../types/AuthenticationSchema";
+import {AuthResponse, TwoFactorRequiredResponse, ValidateSessionResponse} from "../types/AuthenticationSchema";
 import {getDeviceId} from "./getDeviceId";
 import {isMemberLoggedIn} from "./utils";
+import {LoginMemberEmailPasswordParams, LoginMemberEmailPasswordPayload} from "@memberstack/dom";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -16,6 +17,26 @@ export class AuthError extends Error {
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, AuthError);
         }
+    }
+}
+
+export class TwoFactorRequiredError extends Error {
+    data: {
+        memberId: string,
+        email: string,
+        phone: string | null
+    }
+    type: AuthResponse
+
+    constructor(message: string, data: {
+        memberId: string,
+        email: string,
+        phone: string | null
+    }, type: AuthResponse) {
+        super(message);
+        this.name = "TwoFactorRequiredError";
+        this.data = data
+        this.type = type
     }
 }
 
@@ -119,6 +140,21 @@ class AuthService {
         }
     }
 
+    async login(params: LoginMemberEmailPasswordParams) {
+        const res = await this.request<TwoFactorRequiredResponse | LoginMemberEmailPasswordPayload>(
+            "login",
+            "auth",
+            "POST",
+            params,
+            {}
+        );
+
+        if (isTwoFactorRequiredResponse(res)) {
+            throw new TwoFactorRequiredError('2fa required', res.data, res.type)
+        }
+        return res as LoginMemberEmailPasswordPayload
+    }
+
     // Helper to get a cookie
     private getCookie(name: string): string | null {
         const matches = document.cookie.match(new RegExp(`(^| )${name}=([^;]+)`));
@@ -171,6 +207,12 @@ class AuthService {
         );
     }
 
+}
+
+function isTwoFactorRequiredResponse(
+    response: TwoFactorRequiredResponse | LoginMemberEmailPasswordPayload
+): response is TwoFactorRequiredResponse {
+    return 'data' in response && typeof response.data === 'object' && 'type' in response.data;
 }
 
 export {AuthService};

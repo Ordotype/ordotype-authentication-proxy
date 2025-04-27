@@ -1,4 +1,5 @@
 import type { default as MsTypes } from "@memberstack/dom/lib/index";
+import {LoginMemberEmailPasswordParams} from "@memberstack/dom";
 
 const MemberstackEvents = {
     LOGOUT: "memberstack.logout",
@@ -41,9 +42,10 @@ function MemberstackInterceptor() {
                         document.dispatchEvent(evt);
                     }
                     if (propKey === "loginMemberEmailPassword") {
-                        const evt = new Event(MemberstackEvents.LOGIN, {
+                        const evt = new CustomEvent(MemberstackEvents.LOGIN, {
                             bubbles: false,
                             cancelable: false,
+                            detail: args as unknown as LoginMemberEmailPasswordParams
                         });
                         document.dispatchEvent(evt);
 
