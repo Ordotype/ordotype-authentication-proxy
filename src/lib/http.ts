@@ -143,6 +143,10 @@ class AuthService {
     async login(params: LoginMemberEmailPasswordParams) {
         const payload = {
             ...params,
+            options: {
+                includeContentGroups: true,
+                isWebflow: true,
+            },
             device: this.headers["X-Device-Id"] ?? "unknown",
         }
 
