@@ -1,6 +1,5 @@
 import {AuthResponse, TwoFactorRequiredResponse, ValidateSessionResponse} from "../types/AuthenticationSchema";
 import {getDeviceId} from "./getDeviceId";
-import {isMemberLoggedIn} from "./utils";
 import {LoginMemberEmailPasswordParams, LoginMemberEmailPasswordPayload} from "@memberstack/dom";
 
 const BASE_URL = import.meta.env.VITE_API_URL;
@@ -105,10 +104,6 @@ class AuthService {
 
     async validateSessionStatus(): Promise<ValidateSessionResponse | null> {
         try {
-            // Fetch the member token from localStorage
-            if (!isMemberLoggedIn()) {
-                return null
-            }
             const memberToken = localStorage.getItem("_ms-mid");
             return await this.request<ValidateSessionResponse>(
                 "validate-session-status",
@@ -125,10 +120,6 @@ class AuthService {
 
     async logout(): Promise<void> {
         try {
-            // Fetch the member token from localStorage
-            if (!isMemberLoggedIn()) {
-                return
-            }
             const memberToken = localStorage.getItem("_ms-mid");
             await this.request<void>(
                 "logout",

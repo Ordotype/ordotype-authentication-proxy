@@ -1,7 +1,7 @@
 import {MemberstackEvents, MemberstackInterceptor} from "./lib/memberstack-proxy-wrapper";
 import {AuthError, AuthService, TwoFactorRequiredError} from "./lib/http";
 import {isMemberLoggedIn} from "./lib/utils";
-import {LoginMemberEmailPasswordParams} from "@memberstack/dom";
+import type {LoginMemberEmailPasswordParams} from "@memberstack/dom";
 
 MemberstackInterceptor()
 const authService = new AuthService();
@@ -29,8 +29,21 @@ document.addEventListener(MemberstackEvents.GET_APP, async () => {
 
 document.addEventListener(MemberstackEvents.LOGOUT, async () => {
     console.log("logout");
+    if (!isMemberLoggedIn()) {
+        console.log("Member is not logged in.")
+        return
+    }
 
-    await authService.logout();
+    try {
+        await authService.logout();
+
+    } catch (error) {
+        if (error instanceof AuthError) {
+            if (error.status === 401 || error.status === 403) {
+                console.log("Member is already logged out from the server.")
+            }
+        }
+    }
     localStorage.removeItem("_ms-mid");
     localStorage.removeItem("_ms_mem")
     window.location.href = "/";
