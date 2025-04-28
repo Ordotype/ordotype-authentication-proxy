@@ -216,7 +216,7 @@ class AuthService {
 function isTwoFactorRequiredResponse(
     response: TwoFactorRequiredResponse | LoginMemberEmailPasswordPayload
 ): response is TwoFactorRequiredResponse {
-    return 'data' in response && typeof response.data === 'object' && 'type' in response.data;
+    return 'data' in response && typeof response.data === 'object' && 'type' in response;
 }
 
 export {AuthService};
