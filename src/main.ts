@@ -1,7 +1,11 @@
 import {MemberstackEvents, MemberstackInterceptor} from "./lib/memberstack-proxy-wrapper";
 import {AuthError, AuthService, TwoFactorRequiredError} from "./lib/http";
-import {isMemberLoggedIn} from "./lib/utils";
 import type {LoginMemberEmailPasswordParams} from "@memberstack/dom";
+
+function isMemberLoggedIn() {
+    const memberToken = localStorage.getItem("_ms-mid");
+    return !!memberToken;
+}
 
 MemberstackInterceptor()
 const authService = new AuthService();
@@ -18,6 +22,7 @@ document.addEventListener(MemberstackEvents.GET_APP, async () => {
     if (!isMemberLoggedIn()) {
         return
     }
+
     try {
         const isStatusValid = await authService.validateSessionStatus()
         if (isStatusValid === false) {
