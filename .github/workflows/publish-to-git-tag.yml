@@ -15,8 +15,9 @@ env:
   VITE_API_URL: ${{vars.VITE_API_URL}}
   VITE_MS_PUBLIC_KEY: ${{vars.VITE_MS_PUBLIC_KEY}}
   VITE_GA_COOKIE: ${{vars.VITE_GA_COOKIE}}
+  VITE_2FA_URL: ${{vars.VITE_2FA_URL}}
   TAG_NAME: ${{ github.event.inputs.tag || github.event.release.tag_name }}
-
+  
 jobs:
   deploy:
     runs-on: ubuntu-latest
