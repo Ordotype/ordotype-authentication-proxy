@@ -6,6 +6,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
     build: {
+        minify: 'terser',
         lib: {
             entry: resolve(__dirname, 'src/main.ts'),
             name: 'OrdotypeAuthenticationProxy',
