@@ -2,15 +2,17 @@ import {MemberstackEvents, MemberstackInterceptor} from "./lib/memberstack-proxy
 import {AuthError, AuthService, TwoFactorRequiredError} from "./lib/http";
 import type {LoginMemberEmailPasswordParams} from "@memberstack/dom";
 
-function isMemberLoggedIn() {
-    const memberToken = localStorage.getItem("_ms-mid");
-    return !!memberToken;
-}
+
 
 MemberstackInterceptor()
 const authService = new AuthService();
 
 document.addEventListener(MemberstackEvents.GET_APP, async () => {
+    function isMemberLoggedIn() {
+        const memberToken = localStorage.getItem("_ms-mid");
+        return !!memberToken;
+    }
+
     // ToDo Add logic to exclude verification on some pages
     if(location.href.includes("challenge")) {
         console.log("Avoided verification on challenge page")
@@ -39,6 +41,11 @@ document.addEventListener(MemberstackEvents.GET_APP, async () => {
 });
 
 document.addEventListener(MemberstackEvents.LOGOUT, async () => {
+    function isMemberLoggedIn() {
+        const memberToken = localStorage.getItem("_ms-mid");
+        return !!memberToken;
+    }
+
     console.log("logout");
     if (!isMemberLoggedIn()) {
         console.log("Member is not logged in.")
@@ -61,6 +68,11 @@ document.addEventListener(MemberstackEvents.LOGOUT, async () => {
 })
 
 document.addEventListener(MemberstackEvents.LOGIN, async (event) => {
+    function isMemberLoggedIn() {
+        const memberToken = localStorage.getItem("_ms-mid");
+        return !!memberToken;
+    }
+
     console.log("login");
     if (isMemberLoggedIn()) {
         console.log('Member is already logged in.')
