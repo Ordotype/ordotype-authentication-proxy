@@ -9,3 +9,32 @@ export function navigateTo(url: string) {
         window.location.href = url;
     }, 500)
 }
+
+
+export function pollLocalStorage(key: string, interval = 1000, timeout = 60000) {
+    const startTime = Date.now();
+
+    return new Promise((resolve, reject) => {
+        // Polling function to check if the key exists
+        const poll = () => {
+            // Check if the desired key exists in localStorage
+            if (localStorage.getItem(key)) {
+                debugger;
+                resolve(`Key "${key}" found in localStorage.`);
+                return;
+            }
+
+            // Check if the timeout has been exceeded
+            if (Date.now() - startTime >= timeout) {
+                reject(new Error(`Polling timed out. Key "${key}" not found in localStorage.`));
+                return;
+            }
+
+            // Continue polling after the specified interval
+            setTimeout(poll, interval);
+        };
+
+        // Start polling
+        poll();
+    });
+}

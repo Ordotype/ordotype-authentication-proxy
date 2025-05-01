@@ -52,8 +52,11 @@ function MemberstackInterceptor(memberstackInstance: MemberstackDom) {
                         });
                         document.dispatchEvent(evt);
 
-                        // Prevent login
-                        return window._msConfig?.preventLogin && false;
+                        // When triggering login from the modal, it expects a data object. If the returned response is
+                        // undefined or false, it shows an error message to the frontend
+                        return {
+                            data: {},
+                        };
                     }
                     if(propKey === "signupMemberEmailPassword") {
                         const evt = new CustomEvent(MemberstackEvents.SIGN_UP, {

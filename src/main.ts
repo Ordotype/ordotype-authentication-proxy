@@ -1,7 +1,7 @@
 import {MemberstackEvents, MemberstackInterceptor} from "./lib/memberstack-proxy-wrapper";
 import {AuthError, AuthService, TwoFactorRequiredError} from "./lib/http";
 import type {LoginMemberEmailPasswordParams} from "@memberstack/dom";
-import {isMemberLoggedIn, navigateTo} from "./lib/utils";
+import {isMemberLoggedIn, navigateTo, pollLocalStorage} from "./lib/utils";
 
 MemberstackInterceptor(window.$memberstackDom)
 
@@ -43,7 +43,7 @@ document.addEventListener(MemberstackEvents.GET_APP, async () => {
             return
         }
     }
-});
+}, {once: true});
 
 document.addEventListener(MemberstackEvents.LOGOUT, async (ev) => {
     const {detail} = ev as CustomEvent<{isExpired?: boolean}>;
@@ -85,12 +85,13 @@ document.addEventListener(MemberstackEvents.LOGIN, async (event) => {
     try {
         const {detail} = event as CustomEvent<LoginMemberEmailPasswordParams>;
         const res = await authService.login({email: detail.email, password: detail.password});
-
+debugger;
         localStorage.setItem("_ms-mid", res.data.tokens.accessToken);
         localStorage.setItem("_ms-mem", JSON.stringify(res.data.member));
 
         window.location.href = res.data.redirect
     } catch (error) {
+        debugger;
         if (error instanceof TwoFactorRequiredError) {
             const SESSION_NAME = "_ms-2fa-session";
             const session = JSON.stringify({data: error.data, type: error.type});
@@ -105,3 +106,21 @@ document.addEventListener(MemberstackEvents.LOGIN, async (event) => {
     }
 })
 
+document.addEventListener(MemberstackEvents.SIGN_UP, async () => {
+    console.log('signup');
+    pollLocalStorage('_ms-mid', 1000, 30000)
+        .then((message) => console.log(message))
+        .catch((error) => console.error(error));
+})
+
+// window.onbeforeunload = function (ev) {
+//     debugger
+// };
+
+document.querySelector('[data-ms-form="signup"]')?.addEventListener('submit', () => {
+    console.log('signup_form_submit');
+    pollLocalStorage('_ms-mid', 1000, 30000)
+        .then((message) => console.log(message))
+        .catch((error) => console.error(error));
+
+})
