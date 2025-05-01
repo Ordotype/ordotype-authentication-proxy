@@ -7,10 +7,19 @@ MemberstackInterceptor(window.$memberstackDom)
 
 const authService = new AuthService();
 
+const EXCLUDED_URL_PATTERNS: RegExp[] = (
+    import.meta.env.VITE_EXCLUDED_URLS || "/default"
+)
+    .split(",")
+    .map((pattern: string) => new RegExp(pattern));
+
+const isExcludedPage = (url: string): boolean => {
+    return EXCLUDED_URL_PATTERNS.some(pattern => pattern.test(url));
+};
+
 document.addEventListener(MemberstackEvents.GET_APP, async () => {
-    // ToDo Add logic to exclude verification on some pages
-    if (location.href.includes("challenge") || location.href.includes("signup")) {
-        console.log("Avoided verification on challenge page")
+    if (isExcludedPage(location.href)) {
+        console.log("Avoided verification on excluded page")
         return
     }
     console.log("getApp");
@@ -85,20 +94,16 @@ document.addEventListener(MemberstackEvents.LOGIN, async (event) => {
     try {
         const {detail} = event as CustomEvent<LoginMemberEmailPasswordParams>;
         const res = await authService.login({email: detail.email, password: detail.password});
-debugger;
         localStorage.setItem("_ms-mid", res.data.tokens.accessToken);
         localStorage.setItem("_ms-mem", JSON.stringify(res.data.member));
 
         window.location.href = res.data.redirect
     } catch (error) {
-        debugger;
         if (error instanceof TwoFactorRequiredError) {
             const SESSION_NAME = "_ms-2fa-session";
             const session = JSON.stringify({data: error.data, type: error.type});
             sessionStorage.setItem(SESSION_NAME, session);
 
-
-            // window.location.href = import.meta.env.VITE_2FA_URL;
             navigateTo(import.meta.env.VITE_2FA_URL)
             return
         }
@@ -109,18 +114,16 @@ debugger;
 document.addEventListener(MemberstackEvents.SIGN_UP, async () => {
     console.log('signup');
     pollLocalStorage('_ms-mid', 1000, 30000)
-        .then((message) => console.log(message))
+        .then((message) => {
+            debugger;
+            console.log(message)
+        })
         .catch((error) => console.error(error));
 })
-
-// window.onbeforeunload = function (ev) {
-//     debugger
-// };
 
 document.querySelector('[data-ms-form="signup"]')?.addEventListener('submit', () => {
     console.log('signup_form_submit');
     pollLocalStorage('_ms-mid', 1000, 30000)
         .then((message) => console.log(message))
         .catch((error) => console.error(error));
-
 })
