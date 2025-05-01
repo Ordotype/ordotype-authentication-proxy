@@ -1,22 +1,24 @@
-import type { default as MsTypes } from "@memberstack/dom/lib/index";
-import {LoginMemberEmailPasswordParams} from "@memberstack/dom";
+import type { SignupMemberEmailPasswordParams, LoginMemberEmailPasswordParams,} from "@memberstack/dom";
+import type {MemberstackDom} from "../types/global";
 
 const MemberstackEvents = {
     LOGOUT: "memberstack.logout",
     GET_APP: "memberstack.getApp",
     LOGIN: "memberstack.login",
+    VALID_SESSION: "memberstack.validSession",
+    SIGN_UP: "memberstack.signUp",
 };
 
-function MemberstackInterceptor() {
+function MemberstackInterceptor(memberstackInstance: MemberstackDom) {
     if (!window._msConfig) {
         window._msConfig = {
             preventLogin: true,
         };
     }
-    window.$memberstackDom = new Proxy(window.$memberstackDom, {
+    window.$memberstackDom = new Proxy(memberstackInstance, {
         get(
-            target: ReturnType<typeof MsTypes.init>,
-            propKey: keyof ReturnType<typeof MsTypes.init>
+            target: MemberstackDom,
+            propKey: keyof MemberstackDom
         ) {
             const originalMethod = target[propKey];
 
@@ -27,9 +29,10 @@ function MemberstackInterceptor() {
                         `Method ${propKey} called with arguments: ${JSON.stringify(args)}`
                     );
                     if (propKey === "logout") {
-                        const evt = new Event(MemberstackEvents.LOGOUT, {
+                        const evt = new CustomEvent(MemberstackEvents.LOGOUT, {
                             bubbles: false,
                             cancelable: false,
+                            detail: args[0] as unknown as {isExpired?: boolean}
                         });
                         document.dispatchEvent(evt);
                         return false
@@ -51,6 +54,15 @@ function MemberstackInterceptor() {
 
                         // Prevent login
                         return window._msConfig?.preventLogin && false;
+                    }
+                    if(propKey === "signupMemberEmailPassword") {
+                        const evt = new CustomEvent(MemberstackEvents.SIGN_UP, {
+                            bubbles: false,
+                            cancelable: false,
+                            detail: args[0] as unknown as SignupMemberEmailPasswordParams
+                        });
+                        document.dispatchEvent(evt);
+                        return false;
                     }
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-expect-error

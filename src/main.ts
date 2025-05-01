@@ -1,24 +1,18 @@
 import {MemberstackEvents, MemberstackInterceptor} from "./lib/memberstack-proxy-wrapper";
 import {AuthError, AuthService, TwoFactorRequiredError} from "./lib/http";
 import type {LoginMemberEmailPasswordParams} from "@memberstack/dom";
+import {isMemberLoggedIn, navigateTo} from "./lib/utils";
 
+MemberstackInterceptor(window.$memberstackDom)
 
-
-MemberstackInterceptor()
 const authService = new AuthService();
 
 document.addEventListener(MemberstackEvents.GET_APP, async () => {
-    function isMemberLoggedIn() {
-        const memberToken = localStorage.getItem("_ms-mid");
-        return !!memberToken;
-    }
-
     // ToDo Add logic to exclude verification on some pages
-    if(location.href.includes("challenge")) {
+    if (location.href.includes("challenge") || location.href.includes("signup")) {
         console.log("Avoided verification on challenge page")
         return
     }
-
     console.log("getApp");
 
     if (!isMemberLoggedIn()) {
@@ -31,51 +25,61 @@ document.addEventListener(MemberstackEvents.GET_APP, async () => {
             await window.$memberstackDom.logout()
             return
         }
+
+        /**
+         *  This allows other parts of the application to subscribe to and act upon this event for relevant functionality.
+         */
+        const validSessionEvt = new Event(MemberstackEvents.VALID_SESSION, {
+            bubbles: false,
+            cancelable: false,
+        });
+        document.dispatchEvent(validSessionEvt);
     } catch (error) {
         if (error instanceof AuthError) {
-            if (error.status === 401 || error.status === 403)
-                await window.$memberstackDom.logout()
+            if (error.status === 401 || error.status === 403) {
+                // @ts-ignore
+                await window.$memberstackDom.logout({isExpired: true})
+            }
             return
         }
     }
 });
 
-document.addEventListener(MemberstackEvents.LOGOUT, async () => {
-    function isMemberLoggedIn() {
-        const memberToken = localStorage.getItem("_ms-mid");
-        return !!memberToken;
-    }
-
+document.addEventListener(MemberstackEvents.LOGOUT, async (ev) => {
+    const {detail} = ev as CustomEvent<{isExpired?: boolean}>;
     console.log("logout");
     if (!isMemberLoggedIn()) {
         console.log("Member is not logged in.")
         return
     }
 
-    try {
-        await authService.logout();
+    if (detail?.isExpired) {
+        await window.$memberstackDom._showMessage("Forbidden. Please login again.", true)
+    } else {
+        try {
+            await window.$memberstackDom._showMessage("Your session has expired. Please login again.", true)
+            await authService.logout();
 
-    } catch (error) {
-        if (error instanceof AuthError) {
-            if (error.status === 401 || error.status === 403) {
-                console.log("Member is already logged out from the server.")
+        } catch (error) {
+            if (error instanceof AuthError) {
+                if (error.status === 401 || error.status === 403) {
+                    console.log("Member is already logged out from the server.")
+                }
             }
         }
     }
+
     localStorage.removeItem("_ms-mid");
     localStorage.removeItem("_ms_mem")
-    window.location.href = "/";
+    navigateTo("/")
+    // window.location.href = "/";
 })
 
 document.addEventListener(MemberstackEvents.LOGIN, async (event) => {
-    function isMemberLoggedIn() {
-        const memberToken = localStorage.getItem("_ms-mid");
-        return !!memberToken;
-    }
-
     console.log("login");
     if (isMemberLoggedIn()) {
         console.log('Member is already logged in.')
+        await window.$memberstackDom._showMessage("You are already logged in.", true)
         return
     }
     try {
@@ -92,7 +96,9 @@ document.addEventListener(MemberstackEvents.LOGIN, async (event) => {
             const session = JSON.stringify({data: error.data, type: error.type});
             sessionStorage.setItem(SESSION_NAME, session);
 
-            window.location.href = import.meta.env.VITE_2FA_URL;
+
+            // window.location.href = import.meta.env.VITE_2FA_URL;
+            navigateTo(import.meta.env.VITE_2FA_URL)
             return
         }
         throw error;
