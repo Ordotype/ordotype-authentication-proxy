@@ -1,3 +1,6 @@
+import {AuthService} from "./http";
+const authService = new AuthService();
+
 export function isMemberLoggedIn() {
     const memberToken = localStorage.getItem("_ms-mid");
     return !!memberToken;
@@ -19,7 +22,6 @@ export function pollLocalStorage(key: string, interval = 1000, timeout = 60000) 
         const poll = () => {
             // Check if the desired key exists in localStorage
             if (localStorage.getItem(key)) {
-                debugger;
                 resolve(`Key "${key}" found in localStorage.`);
                 return;
             }
@@ -37,4 +39,17 @@ export function pollLocalStorage(key: string, interval = 1000, timeout = 60000) 
         // Start polling
         poll();
     });
+}
+
+export function handleLocalStoragePolling(key: string, interval: number, timeout: number) {
+
+    pollLocalStorage(key, interval, timeout)
+        .then((message) => {
+            console.debug(`[pollLocalStorage] Success: ${message}`);
+            const token = localStorage.getItem(key)!;
+            return authService.signup({token})
+        })
+        .catch((error) => {
+            console.error(`[pollLocalStorage] Error: ${error}`);
+        });
 }

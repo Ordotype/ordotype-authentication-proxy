@@ -27,7 +27,12 @@ interface AuthLoginParams extends LoginMemberEmailPasswordParams {
     };
 }
 
+interface AuthSignupParams {
+    token: string;
+}
+
 export type {
     AuthLoginParams,
     ValidateSessionResponse,
+    AuthSignupParams
 };

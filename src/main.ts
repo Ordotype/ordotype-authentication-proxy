@@ -1,7 +1,7 @@
 import {MemberstackEvents, MemberstackInterceptor} from "./lib/memberstack-proxy-wrapper";
 import {AuthError, AuthService, TwoFactorRequiredError} from "./lib/http";
 import type {LoginMemberEmailPasswordParams} from "@memberstack/dom";
-import {isMemberLoggedIn, navigateTo, pollLocalStorage} from "./lib/utils";
+import {handleLocalStoragePolling, isMemberLoggedIn, navigateTo} from "./lib/utils";
 
 MemberstackInterceptor(window.$memberstackDom)
 
@@ -111,19 +111,13 @@ document.addEventListener(MemberstackEvents.LOGIN, async (event) => {
     }
 })
 
+
 document.addEventListener(MemberstackEvents.SIGN_UP, async () => {
     console.log('signup');
-    pollLocalStorage('_ms-mid', 1000, 30000)
-        .then((message) => {
-            debugger;
-            console.log(message)
-        })
-        .catch((error) => console.error(error));
+    handleLocalStoragePolling('_ms-mid', 1000, 30000);
 })
 
 document.querySelector('[data-ms-form="signup"]')?.addEventListener('submit', () => {
     console.log('signup_form_submit');
-    pollLocalStorage('_ms-mid', 1000, 30000)
-        .then((message) => console.log(message))
-        .catch((error) => console.error(error));
+    handleLocalStoragePolling('_ms-mid', 1000, 30000);
 })

@@ -1,4 +1,9 @@
-import {AuthResponse, TwoFactorRequiredResponse, ValidateSessionResponse} from "../types/AuthenticationSchema";
+import {
+    AuthResponse,
+    AuthSignupParams,
+    TwoFactorRequiredResponse,
+    ValidateSessionResponse
+} from "../types/AuthenticationSchema";
 import {getDeviceId} from "./getDeviceId";
 import {LoginMemberEmailPasswordParams, LoginMemberEmailPasswordPayload} from "@memberstack/dom";
 
@@ -133,6 +138,11 @@ class AuthService {
             console.error("Session logout failed:", error);
             throw error;
         }
+    }
+
+    async signup(params: AuthSignupParams) {
+        return await this.request('signup', 'auth', 'POST', params, {}
+        )
     }
 
     async login(params: LoginMemberEmailPasswordParams) {
