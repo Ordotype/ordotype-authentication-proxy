@@ -1,7 +1,13 @@
 import {MemberstackEvents, MemberstackInterceptor} from "./lib/memberstack-proxy-wrapper";
 import {AuthError, AuthService, TwoFactorRequiredError} from "./lib/http";
 import type {LoginMemberEmailPasswordParams} from "@memberstack/dom";
-import {handleLocalStoragePolling, isMemberLoggedIn, navigateTo} from "./lib/utils";
+import {
+    dispatchValidationEvent,
+    handleLocalStoragePolling,
+    handleLogout,
+    isMemberLoggedIn,
+    navigateTo
+} from "./lib/utils";
 
 MemberstackInterceptor(window.$memberstackDom)
 
@@ -25,7 +31,8 @@ document.addEventListener(MemberstackEvents.GET_APP, async () => {
     console.log("getApp");
 
     if (!isMemberLoggedIn()) {
-        return
+        dispatchValidationEvent('unauthenticated');
+        return;
     }
 
     try {
@@ -38,9 +45,12 @@ document.addEventListener(MemberstackEvents.GET_APP, async () => {
         /**
          *  This allows other parts of the application to subscribe to and act upon this event for relevant functionality.
          */
-        const validSessionEvt = new Event(MemberstackEvents.VALID_SESSION, {
+        const validSessionEvt = new CustomEvent(MemberstackEvents.VALID_SESSION, {
             bubbles: false,
             cancelable: false,
+            detail: {
+                isStatusValid: true
+            }
         });
         document.dispatchEvent(validSessionEvt);
     } catch (error) {
@@ -55,7 +65,7 @@ document.addEventListener(MemberstackEvents.GET_APP, async () => {
 }, {once: true});
 
 document.addEventListener(MemberstackEvents.LOGOUT, async (ev) => {
-    const {detail} = ev as CustomEvent<{isExpired?: boolean}>;
+    const {detail} = ev as CustomEvent<{ isExpired?: boolean }>;
     console.log("logout");
     if (!isMemberLoggedIn()) {
         console.log("Member is not logged in.")
@@ -78,10 +88,7 @@ document.addEventListener(MemberstackEvents.LOGOUT, async (ev) => {
         }
     }
 
-    localStorage.removeItem("_ms-mid");
-    localStorage.removeItem("_ms_mem")
-    navigateTo("/")
-    // window.location.href = "/";
+    await handleLogout(null, "/");
 })
 
 document.addEventListener(MemberstackEvents.LOGIN, async (event) => {

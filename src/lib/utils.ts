@@ -1,4 +1,5 @@
 import {AuthService} from "./http";
+import {MemberstackEvents} from "./memberstack-proxy-wrapper";
 const authService = new AuthService();
 
 export function isMemberLoggedIn() {
@@ -13,6 +14,25 @@ export function navigateTo(url: string) {
     }, 500)
 }
 
+export const handleLogout = async (message: string | null, redirect = "/") => {
+    if (message) {
+        await window.$memberstackDom._showMessage(message, true);
+    }
+    await window.$memberstackDom.logout();
+    localStorage.removeItem("_ms-mid");
+    localStorage.removeItem("_ms_mem");
+    navigateTo(redirect);
+};
+
+
+export const dispatchValidationEvent = (isStatusValid: boolean | 'unauthenticated') => {
+    const validSessionEvt = new CustomEvent(MemberstackEvents.VALID_SESSION, {
+        bubbles: false,
+        cancelable: false,
+        detail: { isStatusValid },
+    });
+    document.dispatchEvent(validSessionEvt);
+};
 
 export function pollLocalStorage(key: string, interval = 1000, timeout = 60000) {
     const startTime = Date.now();
