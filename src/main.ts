@@ -45,14 +45,8 @@ document.addEventListener(MemberstackEvents.GET_APP, async () => {
         /**
          *  This allows other parts of the application to subscribe to and act upon this event for relevant functionality.
          */
-        const validSessionEvt = new CustomEvent(MemberstackEvents.VALID_SESSION, {
-            bubbles: false,
-            cancelable: false,
-            detail: {
-                isStatusValid: true
-            }
-        });
-        document.dispatchEvent(validSessionEvt);
+        dispatchValidationEvent(true);
+
     } catch (error) {
         if (error instanceof AuthError) {
             if (error.status === 401 || error.status === 403) {
